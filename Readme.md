@@ -4,3 +4,4 @@ In Week 2, I explored ESRGAN (Enhanced SRGAN). It builds on SRGAN and brings mul
 
 In Week 3, I learnt about data loading in PyTorch, which is extremely useful when working with large image datasets. Using PyTorch’s Dataset and DataLoader classes, I can now prepare low-resolution and high-resolution image pairs, apply transforms (like cropping, rescaling, etc.), and load them efficiently in batches. This forms the backbone of any deep learning training pipeline, ensuring the model gets clean and structured data during training.
 
+In Week 4, I explored how to visualise training performance using annotated heatmaps in Matplotlib. These heatmaps can be used to show values like loss, PSNR, or SSIM across different epochs or configurations. Annotating each cell with its actual value helps in better understanding the model’s behaviour during training and comparison across experiments.
