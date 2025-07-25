@@ -115,7 +115,8 @@ def train_srgan():
             c_loss = content_criterion(sr_images_g, hr_images)
             p_loss = perceptual_criterion(sr_images_g, hr_images)
             adv_loss = generator_adversarial_criterion(fake_preds_g)
-            g_loss = c_loss + p_loss + config.LAMBDA_ADVERSARIAL * adv_loss
+            # g_loss = c_loss + p_loss + config.LAMBDA_ADVERSARIAL * adv_loss
+            g_loss = p_loss + config.LAMBDA_ADVERSARIAL * adv_loss
             g_loss.backward()
             optimizer_G.step()
 

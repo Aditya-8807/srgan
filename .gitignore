@@ -1,0 +1,12 @@
+# Ignore all generated SR images
+results/generated_images/*.png
+
+# Except epoch 20, 40, 60, 80, 100 samples
+!results/generated_images/epoch_20_sample.png
+!results/generated_images/epoch_40_sample.png
+!results/generated_images/epoch_60_sample.png
+!results/generated_images/epoch_80_sample.png
+!results/generated_images/epoch_100_sample.png
+
+*.pyc
+__pycache__/
