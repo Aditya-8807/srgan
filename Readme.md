@@ -41,7 +41,7 @@ You will need Python 3.8+ and the following libraries:
 
 1. **Clone the repository:**
    ```
-   git clone [https://github.com/Aditya-8807/srgan.git](https://github.com/Aditya-8807/srgan.git)
+   git clone https://github.com/Aditya-8807/srgan.git
    cd srgan
    ```
 
