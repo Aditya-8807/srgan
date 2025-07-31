@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import os
 from src.config import Config
 
+def moving_average(data, window_size=5):
+    """Compute moving average to smooth data."""
+    return np.convolve(data, np.ones(window_size)/window_size, mode='valid')
+
 def plot_results():
     config = Config()
 
@@ -33,15 +37,29 @@ def plot_results():
     plt.legend()
     plt.grid(True)
 
-    # --- Plot 2: PSNR ---
+    # --- Plot 2: PSNR with smoothing and annotation ---
     plt.subplot(1, 2, 2)
-    plt.plot(range(1, epochs_ran + 1), psnr_history, label='PSNR on Sample Image', color='green')
+
+    # Smooth the PSNR curve
+    smoothed_psnr = moving_average(psnr_history, window_size=5)
+    smoothed_epochs = range(5, epochs_ran + 1)
+
+    plt.plot(smoothed_epochs, smoothed_psnr, label='PSNR ', color='green')
+
+    # Mark the max PSNR point
+    max_epoch = np.argmax(psnr_history) + 1
+    max_psnr = psnr_history[max_epoch - 1]
+    plt.axvline(max_epoch, color='gray', linestyle='--', linewidth=1)
+    plt.text(max_epoch, max_psnr, f'Max PSNR: {max_psnr:.2f} dB\n@ Epoch {max_epoch}',
+             fontsize=8, color='black', ha='right')
+
     plt.title('PSNR')
     plt.xlabel('Epochs')
     plt.ylabel('PSNR (dB)')
     plt.legend()
     plt.grid(True)
 
+    # --- Save and Show ---
     plt.tight_layout()
     plot_path = os.path.join(config.LOGS_DIR, 'performance_graphs.png')
     plt.savefig(plot_path)

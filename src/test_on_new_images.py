@@ -1,43 +1,47 @@
-# test_on_new_images.py
-import os
 import torch
+import os
 from PIL import Image
 from torchvision import transforms
+from torchvision.utils import save_image
 from src.models.generator import Generator
 from src.config import Config
 
-# Load model
-config = Config()
-device = config.DEVICE
-generator = Generator().to(device)
-checkpoint = torch.load(os.path.join(config.CHECKPOINT_DIR, "best_model.pth"), map_location=device ,weights_only=False)
-generator.load_state_dict(checkpoint['generator_state_dict'])
-generator.eval()
+def load_image(image_path, device, img_size=None):
+    transform = transforms.Compose([
+        transforms.Resize(img_size) if img_size else transforms.Lambda(lambda x: x),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])  # Normalize to [-1, 1]
+    ])
+    image = Image.open(image_path).convert("RGB")
+    return transform(image).unsqueeze(0).to(device)
 
-# Image transform
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
-inv_transform = transforms.Normalize(
-    mean=[-1, -1, -1],
-    std=[2, 2, 2]
-)
+def generate_sr_images_from_lr_folder(lr_folder, output_folder, checkpoint_path, config):
+    device = config.DEVICE
+    generator = Generator(in_channels=config.IN_CHANNELS, num_rrdb=config.NUM_RRDB_BLOCKS).to(device)
+    
+    # Load checkpoint 60
+    checkpoint = torch.load(checkpoint_path, map_location=device ,weights_only=False)
+    generator.load_state_dict(checkpoint['generator_state_dict'])
+    generator.eval()
 
-# Inference
-input_folder = './test_images/lr/'
-output_folder = './test_images/sr/'
-os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
+    image_filenames = [f for f in os.listdir(lr_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
 
-for filename in os.listdir(input_folder):
-    if filename.lower().endswith((".png", ".jpg", ".jpeg")):
-        img = Image.open(os.path.join(input_folder, filename)).convert("RGB")
-        lr_tensor = transform(img).unsqueeze(0).to(device)
+    for img_file in image_filenames:
+        img_path = os.path.join(lr_folder, img_file)
+        lr_tensor = load_image(img_path, device)  # Shape: [1, 3, H, W]
 
         with torch.no_grad():
             sr_tensor = generator(lr_tensor)
-        
-        sr_tensor = (sr_tensor + 1) / 2  # Denormalize to [0,1]
-        save_path = os.path.join(output_folder, filename)
-        transforms.ToPILImage()(sr_tensor.squeeze().cpu()).save(save_path)
-        print(f"✅ Saved SR image: {save_path}")
+
+        sr_tensor = (sr_tensor + 1) / 2  # Denormalize from [-1, 1] → [0, 1]
+        save_image(sr_tensor, os.path.join(output_folder, f"SR_{img_file}"))
+        print(f"✅ Generated: SR_{img_file}")
+
+if __name__ == "__main__":
+    config = Config()
+    checkpoint_path = os.path.join(config.CHECKPOINT_DIR, "checkpoint_epoch_60.pth")
+    lr_folder = "test_images/LR"  # Your test LR images
+    output_folder = "test_images/SR"
+
+    generate_sr_images_from_lr_folder(lr_folder, output_folder, checkpoint_path, config)
